@@ -1,11 +1,13 @@
 /* eslint-disable no-unused-vars */
 import { autoinject, transient } from 'aurelia-dependency-injection';
+import { MappingProfile, createMap } from '@automapper/core';
 import { Param, Get, Post, Delete, Put, Body, JsonController, HttpCode, Header } from 'routing-controllers';
 import { DataService } from '../model/data.service';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import { Operand } from '../model/implementation/operand';
-import { AddOperator, SubstractOperator } from '../model/implementation';
-import { ExpressionDto, OperandDto, OperatorDto, ResultDto } from '../dto';
+import {  } from '../model/implementation';
+import { Operand, AddOperator, SubstractOperator } from '../model/implementation';
+import { OperandDto, OperatorDto, ResultDto } from '../dto';
+import { IOperand, IOperator } from '../model/contracts';
 
 @JsonController('/calculator')
 @autoinject
@@ -38,25 +40,7 @@ export class CalculatorController {
     return s;
   }
 
-  @Get('/json')
-  @HttpCode(200)
-  @Header('Cache-Control', 'none')
-  @Header('X-Powered-By', 'David Kossoglyad')
-  @OpenAPI({ summary: 'Return a json.' })
-  public async getAsJson(): Promise<string> {
-    const tree: any = new AddOperator(
-        [
-            new Operand<number>(3),
-            new SubstractOperator([
-                new Operand<number>(10),
-                new Operand<number>(5)
-            ])            
-        ]
-    );
-    
-    return JSON.stringify(tree);
-  }
-
+ 
     @HttpCode(200)
     @Post('/')
     @OpenAPI({ summary: 'Evaluates the expression', 'x-examples': [
@@ -78,6 +62,33 @@ export class CalculatorController {
                 ]
               }
             ]
+          }`,
+          `{
+            "type": "AddOperator",
+            "operands": [
+              {
+                 "value": 23
+              },
+              {
+                 "type": "SubstractOperator",
+                 "operands": [
+                   {
+                       "value": 23
+                   },
+                   {
+                       "type": "AddOperator",
+                       "operands": [
+                           {
+                               "value": 2
+                           },
+                           {
+                               "value": -4
+                           }
+                       ]
+                    }
+                ]
+              }
+            ]
           }`
     ] })
     @Header('Cache-Control', 'none')
@@ -88,26 +99,36 @@ export class CalculatorController {
         statusCode: '200',
         isArray: false
       })
+    public async calculate(@Body({validate: true }) expression: OperatorDto): Promise<ResultDto> {
 
-public async calculate(@Body({validate: true }) expression: OperatorDto): Promise<ResultDto> {
+        const tree = this.map(expression);
+        const result = new ResultDto();
+        result.value = (await this.dataService.evaluate(tree)).toString();
+        result.type = 'number';
 
-    const x = expression;
-    
-    const tree: any = new AddOperator(
-        [
-            new Operand<number>(3),
-            new SubstractOperator([
-                new Operand<number>(10),
-                new Operand<number>(5)
-            ])            
-        ]
-    );
+        return result;
+    }
 
-    let result = new ResultDto();
-    result.value = (await this.dataService.evaluate(tree)).toString();
-    result.type = 'number';
+    map(source: OperatorDto): IOperator<number> {
+        const instance = this.createOperator(source.type);
+        source.operands.forEach(op => 
+            {
+                if (!Object.getOwnPropertyDescriptor(op, 'type')) {
+                    instance.operands.push(new Operand<number>(+(<OperandDto>op).value.toString()));
+                } else {
+                    instance.operands.push(this.map(<OperatorDto>op));
+                }
+            });
+        return instance;
+    }
 
-    return result;
-  }
+    createOperator(type: string): IOperator<number> {
+        if (type === 'AddOperator') {
+            return new AddOperator();
+        }
+        if (type === 'SubstractOperator') {
+            return new SubstractOperator();
+        }
+    }
 
 }

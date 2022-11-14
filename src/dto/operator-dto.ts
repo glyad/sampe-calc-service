@@ -36,5 +36,6 @@ export class OperatorDto  extends ExpressionDto {
             message: 'The array size must be 2.'
         })
     @Type(() => OperandDto)
-    operands: OperandDto[] = [];
+    @Type(() => OperatorDto)
+    operands: ExpressionDto[] = [];
 }

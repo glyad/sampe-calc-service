@@ -1,4 +1,3 @@
-import { OperatorDto } from '../../dto';
 import { IOperand } from '../contracts';
 import { OperatorBase } from './operator-base';
 
@@ -20,9 +19,5 @@ export class SubstractOperator extends OperatorBase {
     protected toStringImplementation(): string {
         return `${this.operands[0].toString()} - ${this.operands[1].toString()}`;
     }
-
-    // eslint-disable-next-line no-unused-vars
-    public static fromDto(operatorDto: OperatorDto): OperatorBase {
-        return new SubstractOperator();
-    }
+    
 }
