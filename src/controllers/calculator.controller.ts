@@ -1,13 +1,11 @@
 /* eslint-disable no-unused-vars */
 import { autoinject, transient } from 'aurelia-dependency-injection';
-import { MappingProfile, createMap } from '@automapper/core';
-import { Param, Get, Post, Delete, Put, Body, JsonController, HttpCode, Header } from 'routing-controllers';
+import { Get, Post, Body, JsonController, HttpCode, Header } from 'routing-controllers';
 import { DataService } from '../model/data.service';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import {  } from '../model/implementation';
 import { Operand, AddOperator, SubstractOperator } from '../model/implementation';
-import { OperandDto, OperatorDto, ResultDto } from '../dto';
-import { IOperand, IOperator } from '../model/contracts';
+import { OperatorDto, ResultDto } from '../dto';
+import { Mapper } from '../model/mapper';
 
 @JsonController('/calculator')
 @autoinject
@@ -101,34 +99,12 @@ export class CalculatorController {
       })
     public async calculate(@Body({validate: true }) expression: OperatorDto): Promise<ResultDto> {
 
-        const tree = this.map(expression);
+        const tree = await Mapper.map(expression);
         const result = new ResultDto();
         result.value = (await this.dataService.evaluate(tree)).toString();
         result.type = 'number';
 
         return result;
-    }
-
-    map(source: OperatorDto): IOperator<number> {
-        const instance = this.createOperator(source.type);
-        source.operands.forEach(op => 
-            {
-                if (!Object.getOwnPropertyDescriptor(op, 'type')) {
-                    instance.operands.push(new Operand<number>(+(<OperandDto>op).value.toString()));
-                } else {
-                    instance.operands.push(this.map(<OperatorDto>op));
-                }
-            });
-        return instance;
-    }
-
-    createOperator(type: string): IOperator<number> {
-        if (type === 'AddOperator') {
-            return new AddOperator();
-        }
-        if (type === 'SubstractOperator') {
-            return new SubstractOperator();
-        }
     }
 
 }
