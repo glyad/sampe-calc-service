@@ -1,29 +1,18 @@
+/* eslint-disable no-unused-vars */
 import { singleton } from 'aurelia-dependency-injection';
-import { User } from './user';
+import { IExpression } from './contracts';
 
 @singleton()
 export class DataService {
 
   private counter: number = 0;
 
-  public async getUsers(): Promise<User[]> {
+  public async evaluate(expression: IExpression<number>): Promise<number> {    
+    return this.createPromise(expression.value);
+  }
 
-    const data = [
-      <User>{
-        id: 1,
-        name: 'Vasya',
-        age: 25,
-        counter: ++this.counter
-      },
-      <User>{
-        id: 2,
-        name: 'Petya',
-        age: 32,
-        counter: this.counter
-      }
-    ];
-
-    return this.createPromise(data);
+  public async expressionToString(expression: IExpression<number>): Promise<string> {
+    return this.createPromise(expression.toString());
   }
 
   private createPromise(data: any, timeout: number = 100): Promise<any> {
