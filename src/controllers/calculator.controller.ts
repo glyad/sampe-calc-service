@@ -11,6 +11,8 @@ import { Mapper } from '../model/mapper';
 @autoinject
 @transient(CalculatorController)
 @OpenAPI({
+  summary: 'The Calculator API',
+  tags: ['Calculator'],
   security: [{ basicAuth: [] }],
 })
 export class CalculatorController {

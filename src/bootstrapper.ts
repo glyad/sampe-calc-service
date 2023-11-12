@@ -59,6 +59,9 @@ export class Bootstrapper {
         // Parse routing-controllers classes into OpenAPI spec:
         const storage = getMetadataArgsStorage();
         const spec = routingControllersToSpec(storage, routingControllersOptions, {
+            tags: [
+                { name: 'Calculator', description: 'Represents the Calculator end-points.' }
+            ],
             components: {
                 schemas,
                 securitySchemes: {
@@ -68,7 +71,7 @@ export class Bootstrapper {
                     },
                 },
             },
-            info: {
+            info: {            
                 description: 'Generated with `routing-controllers-openapi`',
                 title: 'A sample API',
                 version: '1.0.0',

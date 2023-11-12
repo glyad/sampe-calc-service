@@ -1,11 +1,13 @@
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, ValidationOptions } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, ValidationOptions } from 'class-validator';
 import { OpenAPI } from 'routing-controllers-openapi';
 import { ExpressionDto } from './expression-dto';
 import { OperandDto } from './operand-dto';
 
-@OpenAPI({ 'x-examples': [
-    `{
+@OpenAPI({ 
+    'description': 'The DTO for the operator expression.',
+    'x-examples': [
+      `{
         "type": "AddOperator",
         "operands": [
           {
@@ -37,5 +39,6 @@ export class OperatorDto  extends ExpressionDto {
         })
     @Type(() => OperandDto)
     @Type(() => OperatorDto)
+    @IsArray({ message: 'The value must be an array of ExpressionDto objects.' } as ValidationOptions)
     operands: ExpressionDto[] = [];
 }
